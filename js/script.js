@@ -7,6 +7,7 @@ class Todo {
 		this.todoList = document.querySelector(todoList);
 		this.todoCompleted = document.querySelector(todoCompleted);
 		this.todoData = new Map(JSON.parse(localStorage.getItem('toDoList')));
+		this.editItemKey = '';
 	}
 
 	generateKey() {
@@ -38,12 +39,33 @@ class Todo {
 		});
 	}
 
+	editItem(key) {
+		this.todoData.forEach(item => {
+			if (item.key === key) {
+				this.input.value = item.value;
+				this.editItemKey = key;
+			}
+			this.render();
+		});
+	}
+
+	setItemValue(key, value) {
+		this.todoData.forEach(item => {
+			if (item.key === key) {
+				item.value = value;
+				this.editItemKey = '';
+			}
+			this.render();
+		});
+
+	}
+
 	handler() {
 		const todoContainer = document.querySelector('.todo-container');
 		todoContainer.addEventListener('click', event => {
 			const target = event.target;
 
-			if (!target.matches('.todo-remove, .todo-complete')) {
+			if (!target.matches('.todo-remove, .todo-complete, .todo-edit')) {
 				return;
 			}
 
@@ -51,6 +73,8 @@ class Todo {
 				this.deleteItem(target.closest('li').key);
 			} else if (target.matches('.todo-complete')) {
 				this.completedItem(target.closest('li').key);
+			} else if (target.matches('.todo-edit')) {
+				this.editItem(target.closest('li').key);
 			}
 		});
 	}
@@ -66,6 +90,7 @@ class Todo {
 		li.insertAdjacentHTML('beforeend', `
       <span class="text-todo">${todo.value}</span>
       <div class="todo-buttons">
+        <button class="todo-edit"></button>
         <button class="todo-remove"></button>
         <button class="todo-complete"></button>
       </div>
@@ -85,7 +110,13 @@ class Todo {
 				completed: false,
 				key: this.generateKey(),
 			};
-			this.todoData.set(newTodo.key, newTodo);
+
+			if (this.editItemKey === '') {
+				this.todoData.set(newTodo.key, newTodo);
+			} else {
+				this.setItemValue(this.editItemKey, this.input.value);
+			}
+
 			this.render();
 		} else {
 			alert('Пустое дело добавить нельзя!');
